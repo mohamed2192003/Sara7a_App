@@ -3,11 +3,15 @@ import { env } from './../config/env.service.js'
 import { databaseConnection } from './database/index.js';
 import { globalErrorHandler } from './common/index.js'
 import authRouter from './modules/Auth/auth.controller.js'
+import messageRouter from './modules/Messages/message.controller.js'
+import cors from 'cors'
 
 export const bootstrap = async()=>{
     const app = express()
     app.use(express.json())
+    app.use(cors())
     app.use('/auth', authRouter)
+    app.use('/messages', messageRouter)
     app.use('/uploads', express.static('uploads'));
     await databaseConnection()
     app.use('{*dummy}', (req, res)=>{
@@ -15,6 +19,6 @@ export const bootstrap = async()=>{
     })
     app.use(globalErrorHandler) 
     app.listen(env.port, ()=>{
-        console.log(`🚀 Server is Running on http://localhost:${env.port}, From app.controller.js`);
+        console.log(`🚀 Server is Running on http://localhost:${env.port}`);
     } )
 }

@@ -42,10 +42,11 @@ export const globalErrorHandler = (error, req, res, next)=>{
     const mood = env.mood == 'dev'
     const defaultMessage = "Something Went Wrong"
     const displayErrorMessage = error.message || defaultMessage
-    const extra = error.extra || {};
+    const extra = error.cause?.extra || {};
     res.status(status).json({
         status,
         stack: mood? error.stack: null,
-        errorMessage: mood? displayErrorMessage: defaultMessage
+        errorMessage: mood? displayErrorMessage: defaultMessage,
+        extra: extra
     });
 }

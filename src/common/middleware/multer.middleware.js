@@ -1,17 +1,15 @@
 import multer from "multer";
 import path from "path";
 import { nanoid } from "nanoid";
-
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/users");
+    cb(null, "uploads");
   },
   filename: function (req, file, cb) {
     const uniqueName = nanoid() + path.extname(file.originalname);
     cb(null, uniqueName);
   }
 });
-
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image")) {
     cb(null, true);
@@ -19,7 +17,6 @@ const fileFilter = (req, file, cb) => {
     cb(new Error("Only Images Allowed"), false);
   }
 };
-
 export const upload = multer({
   storage,
   fileFilter,

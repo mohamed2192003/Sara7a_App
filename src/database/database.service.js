@@ -91,3 +91,21 @@ export const findById = async ({
 
     return await doc
 }
+export const insertOne = async ({
+    model,        // => userModel
+    data = {},    // => { firstName, email, password, ... }
+    select = "",  // => '-password'
+    options = {}  // => { populate: [...] }
+}) => {
+    // create document
+    let doc = await model.create(data)
+    // لو فيه select
+    if (select.length) {
+        doc = await model.findById(doc._id).select(select)
+    }
+    // لو فيه populate
+    if (options.populate) {
+        doc = await doc.populate(options.populate)
+    }
+    return doc
+}

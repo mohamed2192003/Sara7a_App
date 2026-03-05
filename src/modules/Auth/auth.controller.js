@@ -1,19 +1,31 @@
 import { Router } from "express";
-import { deleteUser, getUserById, login, signup, updateUser } from "./auth.service.js";
+import { deleteUser, generateAccessToken, getUserById, login, signup, signupGoogle, updateUser } from "./auth.service.js";
 import { SuccessResponse } from "../../common/index.js";
-import { upload } from "../../common/utils/middleware/multer.middleware.js";
-const router = Router()
-router.post('/signup', async(req, res)=>{
-    let addedUser = await signup(req.body)
+import { upload } from "../../common/middleware/multer.middleware.js";
+import { auth } from "../../common/middleware/auth.js";
+import { loginSchema, signupSchema } from "./auth.validation.js";
+import { validation } from "../../common/utils/validation.js";
+const router = Router() 
+router.post('/signup', validation(signupSchema), async(req, res)=>{
+     let addedUser = await signup(req.body)
     return SuccessResponse({res, message:'User Added Successfully', status:201, data:addedUser})
 })
-router.post('/login', async(req, res)=>{
-    let userData = await login(req.body)
-    return SuccessResponse({res, message:'User Logged in Successfully', status:200, data:userData})
+router.post('/login', validation(loginSchema), async(req, res)=>{
+    let userData = await login(req.body, `${req.protocol}://${req.host}`)
+      return SuccessResponse({res, message:'User Logged in Successfully', status:200, data:userData})
 })
-router.get('/get-user-by-id', async(req, res) =>{
-    let userData = await getUserById(req.headers)
+router.get('/get-user-by-id', auth, async(req, res) =>{
+    let userData = await getUserById(req.userId)
     return SuccessResponse({res, message:'User Found Successfully', status:200, data:userData})
+})
+router.get('/generate-access-token', async(req, res)=>{
+    let {authorization} = req.headers
+    let accessToken = await generateAccessToken(authorization)
+    return SuccessResponse({res, message:'Access Token Generated Successfully', status:200, data: accessToken}) 
+})
+router.post('/signup/gmail', async(req, res)=>{
+    const data = await signupGoogle(req.body)
+    return SuccessResponse({res, message:'User Signed Up Successfully', status:201, data}) 
 })
 router.patch('/update-user', async(req, res)=>{
     let userData = await updateUser(req.headers, req.body)
