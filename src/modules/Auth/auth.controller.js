@@ -1,18 +1,26 @@
 import { Router } from "express";
-import { deleteUser, generateAccessToken, getUserById, login, signup, signupGoogle, updateUser } from "./auth.service.js";
-import { SuccessResponse } from "../../common/index.js";
-import { upload } from "../../common/middleware/multer.middleware.js";
+import { generateAccessToken, getUserById, login, logout, signup, signupGoogle, forgetPassword, resetPassword, verifyEmail, enableTwoFactorAuth, confirmTwoFactorAuth } from "./auth.service.js";
+import {  BadRequestException, SuccessResponse } from "../../common/index.js";
 import { auth } from "../../common/middleware/auth.js";
 import { loginSchema, signupSchema } from "./auth.validation.js";
 import { validation } from "../../common/utils/validation.js";
+import { multerLocal } from "../../common/middleware/multer.middleware.js";
 const router = Router() 
-router.post('/signup', validation(signupSchema), async(req, res)=>{
-     let addedUser = await signup(req.body)
+router.post('/signup', multerLocal({customePath: "profile-pictures"}).single('image'),validation(signupSchema), async(req, res)=>{
+    let addedUser = await signup(req.body, req.file)
     return SuccessResponse({res, message:'User Added Successfully', status:201, data:addedUser})
+})
+router.post('/verify-email', async(req, res)=>{
+    let data = await verifyEmail(req.body)
+    if(data){
+        return SuccessResponse({res, message:'Email Verified Successfully', status:200})
+    }else{
+        return BadRequestException({ message: "Invalid OTP" })
+    }
 })
 router.post('/login', validation(loginSchema), async(req, res)=>{
     let userData = await login(req.body, `${req.protocol}://${req.host}`)
-      return SuccessResponse({res, message:'User Logged in Successfully', status:200, data:userData})
+    return SuccessResponse({res, message:'User Logged in Successfully', status:200, data:userData})
 })
 router.get('/get-user-by-id', auth, async(req, res) =>{
     let userData = await getUserById(req.userId)
@@ -27,33 +35,35 @@ router.post('/signup/gmail', async(req, res)=>{
     const data = await signupGoogle(req.body)
     return SuccessResponse({res, message:'User Signed Up Successfully', status:201, data}) 
 })
-router.patch('/update-user', async(req, res)=>{
-    let userData = await updateUser(req.headers, req.body)
-    return SuccessResponse({res, message:'User Updated Successfully', status:200, data:userData})
-})
-router.delete('/delete-user', async(req, res)=>{
-    let userData = await deleteUser(req.headers)
-    return SuccessResponse({res, message:'User Deleted Successfully', status:200, data:userData})
-})
-router.patch('/upload-profile-img', upload.single('profileImage'), async (req, res) => {
-    if (req.file) {
-      req.body.imgProfileURL = `/uploads/users/${req.file.filename}`;
-    }
-    let userData = await updateUser(req.headers, req.body);
-    return SuccessResponse({ res, message: 'User Updated Successfully', status: 200, data: userData });
-});
-router.get('/profile-picture', async (req, res) => {
-    if (!req.headers.authorization) {
-        return res.status(401).json({ message: "Unauthorized" })
-    }
-    const decode = jwt.verify(req.headers.authorization, env.jwt)
-    const user = await findById({
-        model: userModel,
-        id: decode.id
+router.post('/profile-picture', multerLocal({customePath: "profile-pictures"}).single('image'), async(req, res)=>{
+    req.file.finalPath = `${req.file.destination}/${req.file.filename}`
+    res.status(200).json({
+        message: "File uploaded successfully",
+        file: req.file,
+        body: req.body 
     })
-    if (!user || !user.imgProfileURL) {
-        return res.status(404).json({ message: "No Profile Picture" })
-    }
-    return res.sendFile(path.resolve(user.imgProfileURL))
+})
+router.post('/forget-password', async(req, res)=>{
+    let data = await forgetPassword(req.body)
+    return SuccessResponse({res, message: 'OTP Sent On Email', status: 200})
+})
+router.post('/reset-password', async(req, res)=>{
+    let data = await resetPassword(req.body)
+    return SuccessResponse({res, message: 'Password Reseted Successfully', status: 200, data})
+})
+router.post('/logout', auth, async(req, res)=>{
+    await logout(req)
+    return SuccessResponse({res, message:'User Logged Out Successfully', status:200})
+})
+router.post('/enable-2fa', auth, async(req, res)=>{
+    let data = await enableTwoFactorAuth(req.userId)
+    return SuccessResponse({res, message:'Two Factor Authentication Enabled Successfully', status:200, data})
+})
+router.post('/confirm-2fa', auth, async(req, res)=>{
+let data = await confirmTwoFactorAuth({
+  userId: req.userId,
+  code: req.body.code
+})
+    return SuccessResponse({res, message:'Two Factor Authentication Confirmed Successfully', status:200, data})
 })
 export default router

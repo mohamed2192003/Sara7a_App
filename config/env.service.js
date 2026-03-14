@@ -9,4 +9,22 @@ const adminSignature = process.env.JWT_ADMIN_SIGNATURE
 const userSignature = process.env.JWT_USER_SIGNATURE
 const adminRefreshSignature = process.env.JWT_ADMIN_REFRESH_SIGNATURE
 const userRefreshSignature = process.env.JWT_USER_REFRESH_SIGNATURE
-export const env = {mongoURL, mood, port, salt, jwtKey, adminSignature, userSignature, adminRefreshSignature, userRefreshSignature}
+const baseURL = process.env.BASE_URL
+const redisUrl = process.env.REDIS_URL
+const emailPass = process.env.EMAIL_PASS
+const emailSender = process.env.EMAIL_SENDER
+export const env = { 
+    mongoURL,
+    mood, 
+    port, 
+    salt, 
+    jwtKey, 
+    adminSignature, 
+    userSignature, 
+    adminRefreshSignature, 
+    userRefreshSignature, 
+    baseURL, 
+    redisUrl, 
+    emailPass, 
+    emailSender 
+}

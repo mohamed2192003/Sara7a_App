@@ -1,24 +1,20 @@
 import multer from "multer";
-import path from "path";
-import { nanoid } from "nanoid";
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads");
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = nanoid() + path.extname(file.originalname);
-    cb(null, uniqueName);
-  }
-});
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only Images Allowed"), false);
-  }
-};
-export const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 } 
-});
+import fs from "fs"
+export const multerLocal =({customePath} = {customePath: "general"})=>{
+  let storage = multer.diskStorage({
+    destination: function(req, file, cb){
+      let filePath = `uploads/${customePath}`
+      if(!fs.existsSync(filePath)){
+        fs.mkdirSync(filePath, {recursive: true})
+      }
+      cb(null, filePath)
+    },
+    filename: function(req, file, cb){
+      let prefix = Date.now()
+      let fileName = `${prefix}-${file.originalname}`
+      cb(null, fileName)
+    }
+  })  
+  return multer({ storage})
+}
+export const upload = () => multer({ dest: 'uploads/' })

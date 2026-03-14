@@ -8,14 +8,19 @@ import {
   findByIdAndDelete
 } from "../../database/index.js";
 import messageModel from "../../database/models/message.model.js";
-export const sendMessage = async (body, userId) => {
-  let { message, image } = body;
+import { env } from "../../../config/index.js";
+export const sendMessage = async (body, userId, file ) => {
+  let { message } = body;
   let existedUser = await findById({
     model: userModel,
     id: userId,
   });
   if (!existedUser) {
     return BadRequestException({message: "User not found"});
+  }
+  let image = ''
+  if(file){
+    image = `${env.baseURL}/uploads/${file.filename}`
   }
     let addedMessage = await insertOne({
       model: messageModel,

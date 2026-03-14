@@ -20,36 +20,47 @@ export const generateToken = (user)=>{
     let refreshToken = jwt.sign({id: user._id}, refreshSignature, {audience, expiresIn: '1y'})
     return { accessToken, refreshToken }
 }   
-export const decodeToken= (token)=>{
-    let signature = undefined 
-    let decoded = jwt.decode(token)
+export const decodeToken = (token) => {
+    if (!token) {
+        throw new Error("Token required")
+    }
+    const decoded = jwt.decode(token)
+    if (!decoded) {
+        throw new Error("Invalid token")
+    }
+    let signature
     switch (decoded.aud) {
         case "admin":
             signature = env.adminSignature
-            break;
+            break
+        case "user":
         default:
-            case "user":
             signature = env.userSignature
-            break;
+            break
     }
-    let decodedData = jwt.verify(token, signature)
+    const decodedData = jwt.verify(token, signature)
     return decodedData
 }
-export const decodeRefreshToken= (token)=>{
-    let decoded = jwt.decode(token)
-    let refreshSignature = undefined 
+export const decodeRefreshToken = (token) => {
+    if (!token) {
+        throw new Error("Token required")
+    }
+    const decoded = jwt.decode(token)
+    if (!decoded) {
+        throw new Error("Invalid refresh token")
+    }
+    let refreshSignature
     switch (decoded.aud) {
         case "admin":
             refreshSignature = env.adminRefreshSignature
-            break;
+            break
+        case "user":
         default:
-            case "user":
             refreshSignature = env.userRefreshSignature
-            break;
+            break
     }
-    let decodedData = jwt.verify(token, refreshSignature)
-    return decodedData
+    return jwt.verify(token, refreshSignature)
 }
-export const refreshAccessToken = ()=>{
+// export const refreshAccessToken = ()=>{
 
-}
+// }

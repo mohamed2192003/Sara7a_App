@@ -1,4 +1,3 @@
-// await userModel.findOne({ email, provider: ProviderEnums.System }).select('-password -_id')
 export const findOne =async ({
     model,  // => userModel,
     filter = {},  // => { email, provider: ProviderEnums.System }
@@ -108,4 +107,35 @@ export const insertOne = async ({
         doc = await doc.populate(options.populate)
     }
     return doc
+}
+export const findOneAndUpdate = async ({
+    model,
+    filter = {},
+    data = {},
+    select = "",
+    options = { new: true }
+}) => {
+    let doc = model.findOneAndUpdate(filter, data, options)
+    if (select.length) {
+        doc.select(select)
+    }
+    if (options.populate) {
+        doc.populate(options.populate)
+    }
+    return await doc
+}
+export const findOneAndDelete = async ({
+    model,
+    filter = {},
+    select = "",
+    options = {}
+}) => {
+    let doc = model.findOneAndDelete(filter)
+    if (select.length) {
+        doc.select(select)
+    }
+    if (options.populate) {
+        doc.populate(options.populate)
+    }
+    return await doc
 }
